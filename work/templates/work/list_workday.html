@@ -1,0 +1,9 @@
+{% if workdays_in_current_month %}
+    <ul>
+    {% for work_day in workdays_in_current_month %}
+        <li><a href="/work/day/{{ work_day.id }}/">{{ work_day.id }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No work day are available.</p>
+{% endif %}
