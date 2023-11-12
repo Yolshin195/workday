@@ -49,7 +49,7 @@ def begin_workday(request):
                 workday.begin = datetime.now(UTC)
                 workday.save()
 
-    return redirect('current_workday')
+    return redirect(request.META.get('HTTP_REFERER'))
 
 
 def end_workday(request):
@@ -61,12 +61,12 @@ def end_workday(request):
                 workday.end = datetime.now(UTC)
                 workday.save()
 
-    return redirect('current_workday')
+    return redirect(request.META.get('HTTP_REFERER'))
 
 
 def create_task(request):
     TaskForm(request)
-    return redirect('current_workday')
+    return redirect(request.META.get('HTTP_REFERER'))
 
 
 def begin_task(request):
@@ -78,7 +78,7 @@ def begin_task(request):
                 task.begin = datetime.now(UTC)
                 task.save()
 
-    return redirect('current_workday')
+    return redirect(request.META.get('HTTP_REFERER'))
 
 
 def end_task(request):
@@ -90,7 +90,7 @@ def end_task(request):
                 task.end = datetime.now(UTC)
                 task.save()
 
-    return redirect('current_workday')
+    return redirect(request.META.get('HTTP_REFERER'))
 
 
 def delete_task(request):
@@ -101,4 +101,4 @@ def delete_task(request):
             if task:
                 task.delete()
 
-    return redirect('current_workday')
+    return redirect(request.META.get('HTTP_REFERER'))

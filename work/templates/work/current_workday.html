@@ -39,7 +39,6 @@
         <div class="card-body">
             <h5 class="card-title">Tasks</h5>
 
-            {% if workday.begin is None and workday.end is None %}
             <form action="{% url 'create_task' %}" method="post" class="row g-3">
                 {% csrf_token %}
                 <input type="hidden" name="workday" value="{{ workday.id }}"/>
@@ -59,7 +58,7 @@
                     <button type="submit" class="btn btn-primary">Add Task</button>
                 </div>
             </form>
-            {% endif %}
+
         </div>
 
         {% if tasks %}
@@ -87,13 +86,13 @@
                 <button type="button" class="btn btn-outline-primary">{{ task.begin|date:"H:i" }} | {{ task.end|date:"H:i" }}
                 </button>
                 {% endif %}
-                {% if workday.begin is None and workday.end is None %}
+
                 <form action="{% url 'delete_task' %}" method="post">
                     {% csrf_token %}
                     <input type="hidden" name="id" value="{{ task.id }}">
                     <button type="submit" class="btn btn-outline-danger">X</button>
                 </form>
-                {% endif %}
+
             </li>
             {% endfor %}
         </ol>
