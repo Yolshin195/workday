@@ -1,9 +1,32 @@
-{% if workdays_in_current_month %}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    {% if month_days %}
+    <div class="card text-center" style="width: max-content;">
+        <h5 class="card-title">{{ month_name }}</h5>
+        {% for week_days in month_days %}
+        <div class="row" style="padding: 1em;">
+            {% for day in week_days %}
+            <div class="col">
+                {% if day != 0 %}
+                <button class="btn btn-outline-dark">{{ day }}</button>
+                {% endif%}
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if workdays_in_current_month %}
     <ul>
-    {% for work_day in workdays_in_current_month %}
-        <li><a href="/work/day/{{ work_day.id }}/">{{ work_day.id }}</a></li>
-    {% endfor %}
+        {% for work_day in workdays_in_current_month %}
+        <li><a href="/workday/{{ work_day.day| date:'Y/m/d' }}">{{ work_day.day }}</a></li>
+        {% endfor %}
     </ul>
-{% else %}
+    {% else %}
     <p>No work day are available.</p>
-{% endif %}
+    {% endif %}
+</div>
+{% endblock %}

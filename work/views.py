@@ -7,7 +7,7 @@ from django.views import View
 from .models import Workday
 from .models import Task
 from .forms import TaskForm
-
+import calendar
 
 def list_work_day(request):
     current_month = datetime.now(UTC).month
@@ -18,8 +18,12 @@ def list_work_day(request):
         Q(day__month=current_month, day__year=current_year)
     )
 
-    context = {"workdays_in_current_month": workdays_in_current_month}
-    return render(request, "work/list_work_day.html", context)
+    context = {
+        "month_name": datetime.now(UTC).strftime("%B"),
+        "month_days": calendar.monthcalendar(current_year, current_month),
+        "workdays_in_current_month": workdays_in_current_month
+    }
+    return render(request, "work/list_workday.html", context)
 
 
 class CurrentWorkDayView(View):
