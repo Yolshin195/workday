@@ -1,6 +1,7 @@
+from collections import namedtuple
 from datetime import datetime, UTC
 
-from django.db.models import Q
+from django.db.models import Q, Func, F
 from django.shortcuts import render, redirect
 from django.views import View
 
@@ -9,21 +10,35 @@ from .models import Task
 from .forms import TaskForm
 import calendar
 
-def list_work_day(request):
-    current_month = datetime.now(UTC).month
-    current_year = datetime.now(UTC).year
+Day = namedtuple('Day', ['day', 'today', 'selected', 'tasks_exist'])
 
-    # Получение всех рабочих дней за текущий месяц
-    workdays_in_current_month = Workday.objects.filter(
-        Q(day__month=current_month, day__year=current_year)
-    )
 
-    context = {
-        "month_name": datetime.now(UTC).strftime("%B"),
-        "month_days": calendar.monthcalendar(current_year, current_month),
-        "workdays_in_current_month": workdays_in_current_month
-    }
-    return render(request, "work/list_workday.html", context)
+class MonthFilter:
+    def __init__(self, year=None, month=None, day=None):
+        self.today = datetime.now(UTC)
+        self.selected_date = datetime(year, month, day, tzinfo=UTC) if year and month and day else None
+        self.month_name = self.today.strftime("%B")
+        self.monthcalendar = calendar.monthcalendar(self.today.year, self.today.month)
+        self.workdays = self.workdays_in_select_month(self.today if self.selected_date is None else self.selected_date)
+
+    @staticmethod
+    def workdays_in_select_month(date: datetime) -> list[int]:
+        workdays_in_current_month = Workday.objects.filter(
+            Q(day__month=date.month, day__year=date.year)
+        )
+        return [workday.day.day for workday in workdays_in_current_month]
+
+
+class ListWorkdayView(View):
+    template_name = 'work/list_workday.html'
+
+    def get(self, request, year=None, month=None, day=None):
+        month_filter = MonthFilter(year, month, day)
+
+        context = {
+            "month_filter": month_filter
+        }
+        return render(request, self.template_name, context)
 
 
 class CurrentWorkDayView(View):
@@ -39,8 +54,15 @@ class CurrentWorkDayView(View):
 
         progress = 12.5 * workday.total_worked_hours
 
+        month_filter = MonthFilter(year, month, day)
+
         # Передаем сущность в шаблон
-        context = {'workday': workday, 'tasks': tasks, 'progress': progress}
+        context = {
+            'workday': workday,
+            'tasks': tasks,
+            'progress': progress,
+            'month_filter': month_filter
+        }
         return render(request, self.template_name, context)
 
 

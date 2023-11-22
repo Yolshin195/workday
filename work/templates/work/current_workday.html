@@ -3,103 +3,137 @@
 {% block content %}
 
 <div class="container">
-
-    <div class="card mt-5">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start">
-                <h3 class="card-title">Work Day: {{ workday.day }}</h3>
-                {% if workday.begin is None %}
-                <form action="{% url 'begin_workday' %}" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="id" value="{{ workday.id }}">
-                    <button type="submit" class="btn btn-outline-success">Start</button>
-                </form>
-                {% elif workday.end is None %}
-                <form action="{% url 'end_workday' %}" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="id" value="{{ workday.id }}">
-                    <button type="submit" class="btn btn-outline-danger">{{ workday.begin|date:"H:i" }} | Stop</button>
-                </form>
-                {% else %}
-                <button type="button" class="btn btn-outline-primary">{{ workday.begin|date:"H:i" }} | {{ workday.end|date:"H:i" }}
-                </button>
-                {% endif %}
+    <div class="row">
+        <div class="col-5">
+            {% if month_filter %}
+            <div class="card text-center mt-5" style="width: max-content;">
+                <h5 class="card-title">{{ month_filter.month_name }}</h5>
+                {% for week_days in month_filter.monthcalendar %}
+                <div class="row" style="padding: 1em;">
+                    {% for day in week_days %}
+                    <div class="col">
+                        {% if day != 0 %}
+                        {% if month_filter.today.day == day %}
+                        <a class="btn btn-dark" href="{% url 'current_workday' %}">{{ day }}</a>
+                        {% elif month_filter.selected_date.day == day %}
+                        <button class="btn btn-info">{{ day }}</button>
+                        {% elif day in month_filter.workdays %}
+                        <a class="btn btn-outline-info"
+                           href="{% url 'workday' year=month_filter.today.year month=month_filter.today.month day=day %}">{{ day }}</a>
+                        {% else %}
+                        <button class="btn btn-outline-dark">{{ day }}</button>
+                        {% endif %}
+                        {% endif%}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
             </div>
-            <p>Total Worked Hours: {{ workday.total_worked_hours }}</p>
+            {% endif %}
+        </div>
+        <div class="col">
+            <div class="card mt-5">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h3 class="card-title">Work Day: {{ workday.day }}</h3>
+                        {% if workday.begin is None %}
+                        <form action="{% url 'begin_workday' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="id" value="{{ workday.id }}">
+                            <button type="submit" class="btn btn-outline-success">Start</button>
+                        </form>
+                        {% elif workday.end is None %}
+                        <form action="{% url 'end_workday' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="id" value="{{ workday.id }}">
+                            <button type="submit" class="btn btn-outline-danger">{{ workday.begin|date:"H:i" }} | Stop
+                            </button>
+                        </form>
+                        {% else %}
+                        <button type="button" class="btn btn-outline-primary">{{ workday.begin|date:"H:i" }} | {{ workday.end|date:"H:i" }}
+                        </button>
+                        {% endif %}
+                    </div>
+                    <p>Total Worked Hours: {{ workday.total_worked_hours }}</p>
 
-            <div class="progress" role="progressbar" aria-label="Example with label"
-                 aria-valuenow="{{ workday.total_worked_hours }}" aria-valuemin="0" aria-valuemax="100">
-                <div class="progress-bar" style="width: {{ progress }}%">{{ workday.total_worked_hours }} / 8</div>
+                    <div class="progress" role="progressbar" aria-label="Example with label"
+                         aria-valuenow="{{ workday.total_worked_hours }}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar" style="width: {{ progress }}%">{{ workday.total_worked_hours }} / 8
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+
+                <div class="card-body">
+                    <h5 class="card-title">Tasks</h5>
+
+                    <form action="{% url 'create_task' %}" method="post" class="row g-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="workday" value="{{ workday.id }}"/>
+                        <div class="col-auto">
+                            <input type="text" name="title" class="form-control" placeholder="title"/>
+                        </div>
+                        <div class="col-auto">
+                            <input type="time" name="begin" class="form-control" placeholder="description"/>
+                        </div>
+                        <div class="col-auto">
+                            <input type="time" name="end" class="form-control" placeholder="description"/>
+                        </div>
+                        <div class="col-auto">
+                            <input type="text" name="description" class="form-control" placeholder="description"/>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">Add Task</button>
+                        </div>
+                    </form>
+
+                </div>
+
+                {% if tasks %}
+                <ol class="list-group list-group-flush list-group-numbered">
+                    {% for task in tasks %}
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">{{ task.title }}</div>
+                            {{ task.description }}
+                            [ {{ task.begin|date:"H:i" }} | {{ task.end|date:"H:i" }} ]
+                        </div>
+                        {% if task.begin is None %}
+                        <form action="{% url 'begin_task' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="id" value="{{ task.id }}">
+                            <button type="submit" class="btn btn-outline-success">Start</button>
+                        </form>
+                        {% elif task.end is None %}
+                        <form action="{% url 'end_task' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="id" value="{{ task.id }}">
+                            <button type="submit" class="btn btn-outline-danger">
+                                {{ task.begin|date:"H:i" }} | Stop
+                            </button>
+                        </form>
+                        {% else %}
+                        <button type="button" class="btn btn-outline-primary">
+                            {{ task.begin|date:"H:i" }} | {{ task.end|date:"H:i" }}
+                        </button>
+                        {% endif %}
+
+                        <form action="{% url 'delete_task' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="id" value="{{ task.id }}">
+                            <button type="submit" class="btn btn-outline-danger">X</button>
+                        </form>
+
+                    </li>
+                    {% endfor %}
+                </ol>
+                {% else %}
+                {% endif %}
             </div>
         </div>
     </div>
-
-    <div class="card mt-3">
-
-        <div class="card-body">
-            <h5 class="card-title">Tasks</h5>
-
-            <form action="{% url 'create_task' %}" method="post" class="row g-3">
-                {% csrf_token %}
-                <input type="hidden" name="workday" value="{{ workday.id }}"/>
-                <div class="col-auto">
-                    <input type="text" name="title" class="form-control" placeholder="title"/>
-                </div>
-                <div class="col-auto">
-                    <input type="time" name="begin" class="form-control" placeholder="description"/>
-                </div>
-                <div class="col-auto">
-                    <input type="time" name="end" class="form-control" placeholder="description"/>
-                </div>
-                <div class="col-auto">
-                    <input type="text" name="description" class="form-control" placeholder="description"/>
-                </div>
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-primary">Add Task</button>
-                </div>
-            </form>
-
-        </div>
-
-        {% if tasks %}
-        <ol class="list-group list-group-flush list-group-numbered">
-            {% for task in tasks %}
-            <li class="list-group-item d-flex justify-content-between align-items-start">
-                <div class="ms-2 me-auto">
-                    <div class="fw-bold">{{ task.title }}</div>
-                    {{ task.description }}
-                    [ {{ task.begin|date:"H:i" }} | {{ task.end|date:"H:i" }} ]
-                </div>
-                {% if task.begin is None %}
-                <form action="{% url 'begin_task' %}" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="id" value="{{ task.id }}">
-                    <button type="submit" class="btn btn-outline-success">Start</button>
-                </form>
-                {% elif task.end is None %}
-                <form action="{% url 'end_task' %}" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="id" value="{{ task.id }}">
-                    <button type="submit" class="btn btn-outline-danger">{{ task.begin|date:"H:i" }} | Stop</button>
-                </form>
-                {% else %}
-                <button type="button" class="btn btn-outline-primary">{{ task.begin|date:"H:i" }} | {{ task.end|date:"H:i" }}
-                </button>
-                {% endif %}
-
-                <form action="{% url 'delete_task' %}" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="id" value="{{ task.id }}">
-                    <button type="submit" class="btn btn-outline-danger">X</button>
-                </form>
-
-            </li>
-            {% endfor %}
-        </ol>
-        {% else %}
-        {% endif %}
-    </div>
-
 </div>
 
 {% endblock %}
